@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_datasets as tfds
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import clear_output
@@ -9,11 +8,11 @@ from keras.layers import Activation, MaxPool2D, Concatenate
 
 def conv_block(input, num_filters):
     x = Conv2D(num_filters, 3, padding="same")(input)
-    #x = BatchNormalization()(x)   #Not in the original network. 
+    x = BatchNormalization()(x)   
     x = Activation("relu")(x)
 
     x = Conv2D(num_filters, 3, padding="same")(x)
-    #x = BatchNormalization()(x)  #Not in the original network
+    x = BatchNormalization()(x)  
     x = Activation("relu")(x)
 
     return x
@@ -29,7 +28,7 @@ def decoder_block(input, skip_features, num_filters):
     x = conv_block(x, num_filters)
     return x
 
-def build_unet(input_shape):
+def build_unet(num_classes, input_shape):
     inputs = Input(input_shape)
 
     s1, p1 = encoder_block(inputs, 64)
@@ -44,8 +43,9 @@ def build_unet(input_shape):
     d3 = decoder_block(d2, s2, 128)
     d4 = decoder_block(d3, s1, 64)
 
-    outputs = Conv2D(filters=3, kernel_size=3, strides=(1,1), padding="same")(d4)  #Binary (can be multiclass)
+    output = Conv2D(num_classes, (1,1), padding='same')(d4)
 
+    outputs = Activation('softmax')(output)
     model = Model(inputs, outputs, name="U-Net")
     return model
 
